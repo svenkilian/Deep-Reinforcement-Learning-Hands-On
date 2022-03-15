@@ -40,14 +40,18 @@ def calc_qvals(rewards):
 
 if __name__ == "__main__":
     env = gym.make("CartPole-v0")
-    writer = SummaryWriter(comment="-cartpole-reinforce")
+    writer = SummaryWriter(logdir='', comment="-cartpole-reinforce")
 
     net = PGN(env.observation_space.shape[0], env.action_space.n)
+    print('Network architecture:\n')
     print(net)
 
-    agent = ptan.agent.PolicyAgent(net, preprocessor=ptan.agent.float32_preprocessor,
-                                   apply_softmax=True)
-    exp_source = ptan.experience.ExperienceSourceFirstLast(env, agent, gamma=GAMMA)
+    agent = ptan.agent.PolicyAgent(
+        net, preprocessor=ptan.agent.float32_preprocessor,
+        apply_softmax=True
+    )
+    exp_source = ptan.experience.ExperienceSourceFirstLast(
+        env, agent, gamma=GAMMA)
 
     optimizer = optim.Adam(net.parameters(), lr=LEARNING_RATE)
 
@@ -82,7 +86,8 @@ if __name__ == "__main__":
             writer.add_scalar("reward_100", mean_rewards, step_idx)
             writer.add_scalar("episodes", done_episodes, step_idx)
             if mean_rewards > 195:
-                print("Solved in %d steps and %d episodes!" % (step_idx, done_episodes))
+                print("Solved in %d steps and %d episodes!" %
+                      (step_idx, done_episodes))
                 break
 
         if batch_episodes < EPISODES_TO_TRAIN:
@@ -95,7 +100,10 @@ if __name__ == "__main__":
 
         logits_v = net(states_v)
         log_prob_v = F.log_softmax(logits_v, dim=1)
-        log_prob_actions_v = batch_qvals_v * log_prob_v[range(len(batch_states)), batch_actions_t]
+        log_prob_actions_v = (
+            batch_qvals_v *
+            log_prob_v[range(len(batch_states)), batch_actions_t]
+        )
         loss_v = -log_prob_actions_v.mean()
 
         loss_v.backward()
