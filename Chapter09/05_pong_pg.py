@@ -49,7 +49,8 @@ class MeanBuffer:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--cuda", default=False, action="store_true", help="Enable cuda")
+    parser.add_argument("--cuda", default=False,
+                        action="store_true", help="Enable cuda")
     parser.add_argument("-n", '--name', required=True, help="Name of the run")
     args = parser.parse_args()
     device = torch.device("cuda" if args.cuda else "cpu")
@@ -57,11 +58,13 @@ if __name__ == "__main__":
     envs = [make_env() for _ in range(ENV_COUNT)]
     writer = SummaryWriter(comment="-pong-pg-" + args.name)
 
-    net = common.AtariPGN(envs[0].observation_space.shape, envs[0].action_space.n).to(device)
+    net = common.AtariPGN(envs[0].observation_space.shape,
+                          envs[0].action_space.n).to(device)
     print(net)
 
     agent = ptan.agent.PolicyAgent(net, apply_softmax=True, device=device)
-    exp_source = ptan.experience.ExperienceSourceFirstLast(envs, agent, gamma=GAMMA, steps_count=REWARD_STEPS)
+    exp_source = ptan.experience.ExperienceSourceFirstLast(
+        envs, agent, gamma=GAMMA, steps_count=REWARD_STEPS)
 
     optimizer = optim.Adam(net.parameters(), lr=LEARNING_RATE, eps=1e-3)
 
@@ -103,7 +106,8 @@ if __name__ == "__main__":
             optimizer.zero_grad()
             logits_v = net(states_v)
             log_prob_v = F.log_softmax(logits_v, dim=1)
-            log_prob_actions_v = batch_scale_v * log_prob_v[range(BATCH_SIZE), batch_actions_t]
+            log_prob_actions_v = batch_scale_v * \
+                log_prob_v[range(BATCH_SIZE), batch_actions_t]
             loss_policy_v = -log_prob_actions_v.mean()
 
             prob_v = F.softmax(logits_v, dim=1)
@@ -117,7 +121,8 @@ if __name__ == "__main__":
             # calc KL-div
             new_logits_v = net(states_v)
             new_prob_v = F.softmax(new_logits_v, dim=1)
-            kl_div_v = -((new_prob_v / prob_v).log() * prob_v).sum(dim=1).mean()
+            kl_div_v = -((new_prob_v / prob_v).log()
+                         * prob_v).sum(dim=1).mean()
             writer.add_scalar("kl", kl_div_v.item(), step_idx)
 
             grad_max = 0.0

@@ -34,18 +34,21 @@ class PGN(nn.Module):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--baseline", default=False, action='store_true', help="Enable mean baseline")
+    parser.add_argument("--baseline", default=False,
+                        action='store_true', help="Enable mean baseline")
     args = parser.parse_args()
 
     env = gym.make("CartPole-v0")
-    writer = SummaryWriter(comment="-cartpole-pg" + "-baseline=%s" % args.baseline)
+    writer = SummaryWriter(comment="-cartpole-pg" +
+                           "-baseline=%s" % args.baseline)
 
     net = PGN(env.observation_space.shape[0], env.action_space.n)
     print(net)
 
     agent = ptan.agent.PolicyAgent(net, preprocessor=ptan.agent.float32_preprocessor,
                                    apply_softmax=True)
-    exp_source = ptan.experience.ExperienceSourceFirstLast(env, agent, gamma=GAMMA, steps_count=REWARD_STEPS)
+    exp_source = ptan.experience.ExperienceSourceFirstLast(
+        env, agent, gamma=GAMMA, steps_count=REWARD_STEPS)
 
     optimizer = optim.Adam(net.parameters(), lr=LEARNING_RATE)
 
@@ -81,7 +84,8 @@ if __name__ == "__main__":
             writer.add_scalar("reward_100", mean_rewards, step_idx)
             writer.add_scalar("episodes", done_episodes, step_idx)
             if mean_rewards > 195:
-                print("Solved in %d steps and %d episodes!" % (step_idx, done_episodes))
+                print("Solved in %d steps and %d episodes!" %
+                      (step_idx, done_episodes))
                 break
 
         if len(batch_states) < BATCH_SIZE:
@@ -94,7 +98,8 @@ if __name__ == "__main__":
         optimizer.zero_grad()
         logits_v = net(states_v)
         log_prob_v = F.log_softmax(logits_v, dim=1)
-        log_prob_actions_v = batch_scale_v * log_prob_v[range(BATCH_SIZE), batch_actions_t]
+        log_prob_actions_v = batch_scale_v * \
+            log_prob_v[range(BATCH_SIZE), batch_actions_t]
         loss_policy_v = -log_prob_actions_v.mean()
 
         loss_policy_v.backward(retain_graph=True)
@@ -123,7 +128,8 @@ if __name__ == "__main__":
         writer.add_scalar("loss_policy", loss_policy_v.item(), step_idx)
         writer.add_scalar("loss_total", loss_v.item(), step_idx)
 
-        writer.add_scalar("grad_l2", np.sqrt(np.mean(np.square(grads))), step_idx)
+        writer.add_scalar("grad_l2", np.sqrt(
+            np.mean(np.square(grads))), step_idx)
         writer.add_scalar("grad_max", np.max(np.abs(grads)), step_idx)
         writer.add_scalar("grad_var", np.var(grads), step_idx)
 
