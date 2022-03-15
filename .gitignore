@@ -6,6 +6,7 @@ recording
 *.txt
 !requirements.txt
 *.dat
+*.data
 __pycache__
 *.png
 *.pyc
