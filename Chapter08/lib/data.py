@@ -5,7 +5,8 @@ import numpy as np
 import collections
 
 
-Prices = collections.namedtuple('Prices', field_names=['open', 'high', 'low', 'close', 'volume'])
+Prices = collections.namedtuple(
+    'Prices', field_names=['open', 'high', 'low', 'close', 'volume'])
 
 
 def read_csv(file_name, sep=',', filter_data=True, fix_open_price=False):
@@ -15,7 +16,8 @@ def read_csv(file_name, sep=',', filter_data=True, fix_open_price=False):
         h = next(reader)
         if '<OPEN>' not in h and sep == ',':
             return read_csv(file_name, ';')
-        indices = [h.index(s) for s in ('<OPEN>', '<HIGH>', '<LOW>', '<CLOSE>', '<VOL>')]
+        indices = [h.index(s) for s in (
+            '<OPEN>', '<HIGH>', '<LOW>', '<CLOSE>', '<VOL>')]
         o, h, l, c, v = [], [], [], [], []
         count_out = 0
         count_filter = 0
@@ -46,11 +48,13 @@ def read_csv(file_name, sep=',', filter_data=True, fix_open_price=False):
             prev_vals = vals
     print("Read done, got %d rows, %d filtered, %d open prices adjusted" % (
         count_filter + count_out, count_filter, count_fixed))
-    return Prices(open=np.array(o, dtype=np.float32),
-                  high=np.array(h, dtype=np.float32),
-                  low=np.array(l, dtype=np.float32),
-                  close=np.array(c, dtype=np.float32),
-                  volume=np.array(v, dtype=np.float32))
+    return Prices(
+        open=np.array(o, dtype=np.float32),
+        high=np.array(h, dtype=np.float32),
+        low=np.array(l, dtype=np.float32),
+        close=np.array(c, dtype=np.float32),
+        volume=np.array(v, dtype=np.float32)
+    )
 
 
 def prices_to_relative(prices):

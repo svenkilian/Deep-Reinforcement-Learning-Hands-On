@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import matplotlib.pyplot as plt
 import argparse
 import numpy as np
 
@@ -8,7 +9,6 @@ import torch
 
 import matplotlib as mpl
 mpl.use("Agg")
-import matplotlib.pyplot as plt
 
 
 EPSILON = 0.02
@@ -16,12 +16,18 @@ EPSILON = 0.02
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("-d", "--data", required=True, help="CSV file with quotes to run the model")
-    parser.add_argument("-m", "--model", required=True, help="Model file to load")
-    parser.add_argument("-b", "--bars", type=int, default=50, help="Count of bars to feed into the model")
-    parser.add_argument("-n", "--name", required=True, help="Name to use in output images")
-    parser.add_argument("--commission", type=float, default=0.1, help="Commission size in percent, default=0.1")
-    parser.add_argument("--conv", default=False, action="store_true", help="Use convolution model instead of FF")
+    parser.add_argument("-d", "--data", required=True,
+                        help="CSV file with quotes to run the model")
+    parser.add_argument("-m", "--model", required=True,
+                        help="Model file to load")
+    parser.add_argument("-b", "--bars", type=int, default=50,
+                        help="Count of bars to feed into the model")
+    parser.add_argument("-n", "--name", required=True,
+                        help="Name to use in output images")
+    parser.add_argument("--commission", type=float, default=0.1,
+                        help="Commission size in percent, default=0.1")
+    parser.add_argument("--conv", default=False, action="store_true",
+                        help="Use convolution model instead of FF")
     args = parser.parse_args()
 
     prices = data.load_relative(args.data)
@@ -30,9 +36,11 @@ if __name__ == "__main__":
     if args.conv:
         net = models.DQNConv1D(env.observation_space.shape, env.action_space.n)
     else:
-        net = models.SimpleFFDQN(env.observation_space.shape[0], env.action_space.n)
+        net = models.SimpleFFDQN(
+            env.observation_space.shape[0], env.action_space.n)
 
-    net.load_state_dict(torch.load(args.model, map_location=lambda storage, loc: storage))
+    net.load_state_dict(torch.load(
+        args.model, map_location=lambda storage, loc: storage))
 
     obs = env.reset()
     start_price = env._state._cur_close()

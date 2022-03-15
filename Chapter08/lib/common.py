@@ -43,7 +43,8 @@ class RewardTracker:
         mean_steps = np.mean(self.total_steps[-100:])
         epsilon_str = "" if epsilon is None else ", eps %.2f" % epsilon
         print("%d: done %d games, mean reward %.3f, mean steps %.2f, speed %.2f f/s%s" % (
-            frame, len(self.total_rewards)*self.group_rewards, mean_reward, mean_steps, speed, epsilon_str
+            frame, len(self.total_rewards) *
+            self.group_rewards, mean_reward, mean_steps, speed, epsilon_str
         ))
         sys.stdout.flush()
         if epsilon is not None:
@@ -82,7 +83,7 @@ def unpack_batch(batch):
         else:
             last_states.append(np.array(exp.last_state, copy=False))
     return np.array(states, copy=False), np.array(actions), np.array(rewards, dtype=np.float32), \
-           np.array(dones, dtype=np.uint8), np.array(last_states, copy=False)
+        np.array(dones, dtype=np.uint8), np.array(last_states, copy=False)
 
 
 def calc_loss(batch, net, tgt_net, gamma, device="cpu"):
@@ -94,9 +95,11 @@ def calc_loss(batch, net, tgt_net, gamma, device="cpu"):
     rewards_v = torch.tensor(rewards).to(device)
     done_mask = torch.ByteTensor(dones).to(device)
 
-    state_action_values = net(states_v).gather(1, actions_v.unsqueeze(-1)).squeeze(-1)
+    state_action_values = net(states_v).gather(
+        1, actions_v.unsqueeze(-1)).squeeze(-1)
     next_state_actions = net(next_states_v).max(1)[1]
-    next_state_values = tgt_net(next_states_v).gather(1, next_state_actions.unsqueeze(-1)).squeeze(-1)
+    next_state_values = tgt_net(next_states_v).gather(
+        1, next_state_actions.unsqueeze(-1)).squeeze(-1)
     next_state_values[done_mask] = 0.0
 
     expected_state_action_values = next_state_values.detach() * gamma + rewards_v
