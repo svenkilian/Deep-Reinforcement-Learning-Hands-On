@@ -9,4 +9,6 @@ recording
 __pycache__
 *.png
 *.pyc
+*.csv
+*.hdf
 roboschool-files
