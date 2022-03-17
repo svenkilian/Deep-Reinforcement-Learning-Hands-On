@@ -7,20 +7,24 @@ from lib import data, environ
 class TestEnv(unittest.TestCase):
     def test_simple(self):
         prices = data.load_relative("data/YNDX_160101_161231.csv")
-        env = environ.StocksEnv({"YNDX": prices})
+        env = environ.StocksEnv({"YNDX": prices}, state_1d=True)
         s = env.reset()
         obs, reward, done, info = env.step(0)
+        print(obs)
+        print(obs.shape)
         self.assertAlmostEqual(reward, 0.0, 6)
 
 
 class TestStates(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        p = data.Prices(open=np.array([1.0, 2.0, 3.0, 1.0]),
-                        high=np.array([2.0, 3.0, 4.0, 2.0]),
-                        low=np.array([0.0, 1.0, 2.0, 0.0]),
-                        close=np.array([2.0, 3.0, 1.0, 2.0]),
-                        volume=np.array([10.0, 10.0, 10.0, 10.0]))
+        p = data.Prices(
+            open=np.array([1.0, 2.0, 3.0, 1.0]),
+            high=np.array([2.0, 3.0, 4.0, 2.0]),
+            low=np.array([0.0, 1.0, 2.0, 0.0]),
+            close=np.array([2.0, 3.0, 1.0, 2.0]),
+            volume=np.array([10.0, 10.0, 10.0, 10.0])
+        )
         cls.prices = {"TST": data.prices_to_relative(p)}
 
     def test_basic(self):
@@ -29,8 +33,10 @@ class TestStates(unittest.TestCase):
         self.assertEqual(s.shape, (4*3+2,))
 
     def test_basic1d(self):
-        s = environ.State1D(bars_count=2, comission_perc=0.0,
-                            reset_on_close=False, volumes=True)
+        s = environ.State1D(
+            bars_count=2, commission_perc=0.0,
+            reset_on_close=False, volumes=True
+        )
         self.assertEqual(s.shape, (6, 2))
         s.reset(self.prices['TST'], 1)
         d = s.encode()
@@ -57,7 +63,7 @@ class TestStates(unittest.TestCase):
 
     def test_reward(self):
         s = environ.State(bars_count=1, commission_perc=0.0,
-                          reset_on_close=False, reward_on_close=True)
+                          reset_on_close=False, reward_on_close=False)
         s.reset(self.prices['TST'], offset=0)
         self.assertFalse(s.have_position)
         self.assertAlmostEqual(s._cur_close(), 2.0)
@@ -77,33 +83,36 @@ class TestStates(unittest.TestCase):
 
     def test_comission(self):
         s = environ.State(bars_count=1, commission_perc=1.0,
-                          reset_on_close=False)
+                          reset_on_close=False, reward_on_close=False)
         s.reset(self.prices['TST'], offset=0)
         self.assertFalse(s.have_position)
         self.assertAlmostEqual(s._cur_close(), 2.0)
         r, done = s.step(environ.Actions.Buy)
         self.assertTrue(s.have_position)
         self.assertFalse(done)
-        # execution price is the cur bar close, comission 1%, reward in percent
-        self.assertAlmostEqual(r, 100.0 * (3.0 - 2.0) / 2.0 - 1.0)
+        # Execution price is the cur bar close, comission 1%, reward in percent
+        self.assertAlmostEqual(r, 100.0 * ((3.0 - 2.0) / 2.0) - 1.0)
         self.assertAlmostEqual(s._cur_close(), 3.0)
 
     def test_final_reward(self):
         s = environ.State(bars_count=1, commission_perc=0.0,
-                          reset_on_close=False, reward_on_close=True)
+                          reset_on_close=False, reward_on_close=False)
         s.reset(self.prices['TST'], offset=0)
         self.assertFalse(s.have_position)
         self.assertAlmostEqual(s._cur_close(), 2.0)
+        # Buy at the end of bar 1 at price 2.0
         r, done = s.step(environ.Actions.Buy)
         self.assertTrue(s.have_position)
         self.assertFalse(done)
+        # Reward from action equals 50% gain (2 -> 3)
         self.assertAlmostEqual(r, 50.0)
         self.assertAlmostEqual(s._cur_close(), 3.0)
-        r, done = s.step(environ.Actions.Skip)
+        r, done = s.step(environ.Actions.Skip)  # Hold for one period
         self.assertFalse(done)
-        self.assertAlmostEqual(r, -2/3 * 100.0)
+        # Reward from action equals 66,67% loss (3 -> 1)
+        self.assertAlmostEqual(r, -2.0/3.0 * 100.0)
         self.assertAlmostEqual(s._cur_close(), 1.0)
-        r, done = s.step(environ.Actions.Close)
+        r, done = s.step(environ.Actions.Close)  # Close position at price 1.0
         self.assertTrue(done)
-        self.assertAlmostEqual(r, -50.0)
+        self.assertAlmostEqual(r, 100.0)
         self.assertAlmostEqual(s._cur_close(), 2.0)

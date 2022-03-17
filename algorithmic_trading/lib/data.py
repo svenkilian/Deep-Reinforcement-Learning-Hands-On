@@ -14,10 +14,14 @@ def read_csv(file_name, sep=',', filter_data=True, fix_open_price=False):
     with open(file_name, 'rt', encoding='utf-8') as fd:
         reader = csv.reader(fd, delimiter=sep)
         h = next(reader)
-        if '<OPEN>' not in h and sep == ',':
+        # if '<OPEN>' not in h and sep == ',':
+        if 'open' not in h and sep == ',':
             return read_csv(file_name, ';')
+        # indices = [h.index(s) for s in (
+        #     '<OPEN>', '<HIGH>', '<LOW>', '<CLOSE>', '<VOL>')]
+        print(h)
         indices = [h.index(s) for s in (
-            '<OPEN>', '<HIGH>', '<LOW>', '<CLOSE>', '<VOL>')]
+            'open', 'high', 'low', 'close', 'vol')]
         o, h, l, c, v = [], [], [], [], []
         count_out = 0
         count_filter = 0

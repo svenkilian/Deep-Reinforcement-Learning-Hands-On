@@ -22,7 +22,7 @@ def validation_run(env, net, episodes=100, device="cpu", epsilon=0.02, comission
         episode_steps = 0
 
         while True:
-            obs_v = torch.tensor([obs]).to(device)
+            obs_v = torch.tensor(np.array([obs])).to(device)
             out_v = net(obs_v)
 
             action_idx = out_v.max(dim=1)[1].item()
