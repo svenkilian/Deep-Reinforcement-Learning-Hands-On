@@ -169,7 +169,7 @@ class StocksEnv(gym.Env):
 
     def __init__(
         self,
-        prices,
+        prices: dict,
         bars_count=DEFAULT_BARS_COUNT,
         commission=DEFAULT_COMMISSION_PERC,
         reset_on_close=True,
@@ -210,7 +210,8 @@ class StocksEnv(gym.Env):
 
     def reset(self):
         # Make selection of the instrument and its offset, then reset the state
-        self._instrument = self.np_random.choice(list(self._prices.keys()))
+        # self._instrument = self.np_random.choice(list(self._prices.keys()))
+        self._instrument = list(self._prices.keys())[0]
         prices = self._prices[self._instrument]
         bars = self._state.bars_count
         if self.random_ofs_on_reset:
