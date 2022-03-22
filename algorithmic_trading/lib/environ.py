@@ -86,8 +86,10 @@ class State:
         if not self.have_position:
             res[shift] = 0.0
         else:
-            res[shift] = (self._cur_close() - self.open_price) / \
+            res[shift] = (
+                (self._cur_close() - self.open_price) /
                 self.open_price
+            )
         return res
 
     def _cur_close(self):
@@ -110,11 +112,15 @@ class State:
         done = False
         sold = False
         close = self._cur_close()
-        if action == Actions.Buy and not self.have_position:
+        if (action == Actions.Buy) and not self.have_position:
             self.have_position = True
             self.open_price = close
             reward -= self.commission_perc
-        elif action == Actions.Close and self.have_position:
+        elif (action == Actions.Buy) and self.have_position:
+            action = Actions.Skip
+        elif (action == Actions.Close) and not self.have_position:
+            action = Actions.Skip
+        elif (action == Actions.Close) and self.have_position:
             reward -= self.commission_perc
             done |= self.reset_on_close
             sold = True
@@ -225,11 +231,12 @@ class StocksEnv(gym.Env):
         action = Actions(action_idx)
         reward, done = self._state.step(action)
         obs = self._state.encode()
-        info = {"instrument": self._instrument, "offset": self._state._offset}
+        info = {"instrument": self._instrument,
+                "offset": self._state._offset, 'open': self._state._cur_close()}
         return obs, reward, done, info
 
     def render(self, mode='human', close=False):
-        pass
+        return self._state._cur_close()
 
     def close(self):
         pass
