@@ -13,3 +13,4 @@ __pycache__
 *.csv
 *.hdf
 roboschool-files
+/algorithmic_trading/saves/
